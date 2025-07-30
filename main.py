@@ -62,7 +62,7 @@ class NotesApp:
         return [n for n in self.notes if keyword_lower in n.title.lower() or keyword_lower in n.content.lower()]
 
 def print_note(note: Note):
-    print(f"[{note.id}] {note.title} ({note.created_at})\n{note.content}\n")
+    print(f"[{note.id}] {note.title} ({note.created_at})\n{note.content}\n")  # タイトル・本文はそのまま
 
 
 def main():
@@ -88,25 +88,25 @@ def main():
 
     if args.command == "add":
         note = app.add(args.title, args.content)
-        print("Added note:")
+        print("ノートを追加しました：")
         print_note(note)
     elif args.command == "remove":
         success = app.remove(args.id)
         if success:
-            print(f"Removed note {args.id}")
+            print(f"ノート {args.id} を削除しました")
         else:
-            print(f"Note {args.id} not found")
+            print(f"ノート {args.id} が見つかりません")
     elif args.command == "list":
         for note in app.list_notes():
             print_note(note)
     elif args.command == "search":
         results = app.search(args.keyword)
         if results:
-            print(f"Found {len(results)} note(s):")
+            print(f"{len(results)} 件のノートが見つかりました：")
             for note in results:
                 print_note(note)
         else:
-            print("No matching notes found")
+            print("該当するノートはありません")
     else:
         parser.print_help()
 
