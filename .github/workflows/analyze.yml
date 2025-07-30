@@ -12,6 +12,9 @@ jobs:
       contents: read
       issues: write
     runs-on: ubuntu-latest
+    outputs:
+      approve_result: ${{ steps.approve.outputs.result }}
+      approve_approved: ${{ steps.approve.outputs.approved }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -57,11 +60,11 @@ jobs:
 
       - name: Log manual-approval outputs
         run: |
-          echo "approve.result=${{ steps.approve.outputs.result }}"
-          echo "approve.approved=${{ steps.approve.outputs.approved }}"
+          echo "job.approve_result=${{ job.outputs.approve_result }}"
+          echo "job.approve_approved=${{ job.outputs.approve_approved }}"
 
       - name: Send email with analysis
-        if: ${{ steps.approve.outputs.result == 'approved' || steps.approve.outputs.approved == 'true' }}
+        if: ${{ job.outputs.approve_result == 'approved' || job.outputs.approve_approved == 'true' }}
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_SERVER }}
