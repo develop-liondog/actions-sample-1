@@ -48,7 +48,7 @@ jobs:
         id: approve
         uses: trstringer/manual-approval@v1
         with:
-          secret: ${{ secrets.GITHUB_TOKEN }}
+          secret: ${{ secrets.GH_TOKEN }}
           approvers: ${{ github.actor }}
 
       - name: Send email with analysis
