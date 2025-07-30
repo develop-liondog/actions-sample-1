@@ -31,9 +31,9 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           python scripts/analyze_diff.py diff.txt analysis.txt
-          echo "analysis<<EOF" >> $GITHUB_OUTPUT
+          echo "analysis<<__END_OF_ANALYSIS__" >> $GITHUB_OUTPUT
           cat analysis.txt >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "__END_OF_ANALYSIS__" >> $GITHUB_OUTPUT
 
       - name: Upload analysis artifact
         uses: actions/upload-artifact@v4
