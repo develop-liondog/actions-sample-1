@@ -19,11 +19,11 @@ def main(diff_path: str, output_path: str = "analysis.txt"):
 
     prompt = PROMPT.format(diff=diff_content)
 
-    response = openai.ChatCompletion.create(
+    client = openai.OpenAI(api_key=openai.api_key)
+    response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}],
     )
-
     analysis = response.choices[0].message.content
 
     with open(output_path, "w", encoding="utf-8") as f:
