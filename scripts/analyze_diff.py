@@ -21,7 +21,7 @@ def main(diff_path: str, output_path: str = "analysis.txt"):
 
     client = openai.OpenAI(api_key=openai.api_key)
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4o",
         messages=[{"role": "user", "content": prompt}],
     )
     analysis = response.choices[0].message.content

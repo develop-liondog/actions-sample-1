@@ -7,6 +7,8 @@ on:
 
 jobs:
   analyze:
+    permissions:
+      actions: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -48,7 +50,7 @@ jobs:
         id: approve
         uses: trstringer/manual-approval@v1
         with:
-          secret: ${{ secrets.GH_TOKEN }}
+          secret: ${{ secrets.GITHUB_TOKEN }}
           approvers: ${{ github.actor }}
 
       - name: Send email with analysis
