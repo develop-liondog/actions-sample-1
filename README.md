@@ -32,3 +32,27 @@ The workflow located at `.github/workflows/analyze.yml` performs the following:
 
 The manual approval step uses the [trstringer/manual-approval](https://github.com/trstringer/manual-approval)
 action. The email is sent using [dawidd6/action-send-mail](https://github.com/dawidd6/action-send-mail).
+
+### Personal Access Token
+
+The workflow relies on the built-in `GITHUB_TOKEN` for most operations. When running in
+environments where this token does not have sufficient privileges (e.g. forks), create a
+PAT with at least the following scopes:
+
+- `repo` – read repository contents and create statuses for approval.
+- `workflow` – trigger and approve workflows.
+
+Add this token as a secret (for example `GH_PAT`) and reference it in the workflow if needed.
+
+### Notes on `GITHUB_OUTPUT`
+
+The `Analyze diff with OpenAI` step outputs the analysis using a multi-line variable. To
+avoid `"Matching delimiter not found '__END_OF_ANALYSIS__'"` errors, the closing delimiter
+must appear on its own line. The workflow writes a blank line before the closing delimiter:
+
+```bash
+echo "analysis<<__END_OF_ANALYSIS__" >> $GITHUB_OUTPUT
+cat sanitized_analysis.txt >> $GITHUB_OUTPUT
+echo "" >> $GITHUB_OUTPUT
+echo "__END_OF_ANALYSIS__" >> $GITHUB_OUTPUT
+```
