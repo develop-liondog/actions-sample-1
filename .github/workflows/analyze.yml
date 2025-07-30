@@ -31,8 +31,10 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           python scripts/analyze_diff.py diff.txt analysis.txt
+          # delimiterがanalysis.txtに含まれている場合は除去
+          sed '/^__END_OF_ANALYSIS__$/d' analysis.txt > sanitized_analysis.txt
           echo "analysis<<__END_OF_ANALYSIS__" >> $GITHUB_OUTPUT
-          cat analysis.txt >> $GITHUB_OUTPUT
+          cat sanitized_analysis.txt >> $GITHUB_OUTPUT
           echo "__END_OF_ANALYSIS__" >> $GITHUB_OUTPUT
 
       - name: Upload analysis artifact
