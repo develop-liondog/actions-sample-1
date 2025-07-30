@@ -55,8 +55,13 @@ jobs:
           secret: ${{ secrets.GITHUB_TOKEN }}
           approvers: ${{ github.actor }}
 
+      - name: Log manual-approval outputs
+        run: |
+          echo "approve.result=${{ steps.approve.outputs.result }}"
+          echo "approve.approved=${{ steps.approve.outputs.approved }}"
+
       - name: Send email with analysis
-        if: ${{ steps.approve.outputs.result == 'approved' }}
+        if: ${{ steps.approve.outputs.result == 'approved' || steps.approve.outputs.approved == 'true' }}
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_SERVER }}
