@@ -56,7 +56,7 @@ jobs:
           approvers: ${{ github.actor }}
 
       - name: Send email with analysis
-        if: ${{ steps.approve.outputs.approved == 'true' }}
+        if: ${{ steps.approve.outputs.result == 'approved' }}
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_SERVER }}
