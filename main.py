@@ -64,7 +64,6 @@ class NotesApp:
 def print_note(note: Note):
     print(f"[{note.id}] {note.title} ({note.created_at})\n{note.content}\n")  # タイトル・本文はそのまま
 
-
 def main():
     import argparse
 

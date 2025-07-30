@@ -1,2 +1,4 @@
 notes.json
 analysis.txt
+__pycache__/
+scripts/__pycache__/
