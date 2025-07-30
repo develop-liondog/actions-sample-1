@@ -1,0 +1,65 @@
+name: Analyze Diff and Send Email
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Get git diff
+        run: |
+          git fetch --depth=2 origin ${{ github.ref }}
+          git diff HEAD^ HEAD > diff.txt
+
+      - name: Install dependencies
+        run: pip install openai
+
+      - name: Analyze diff with OpenAI
+        id: analyze
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/analyze_diff.py diff.txt analysis.txt
+          echo "analysis<<EOF" >> $GITHUB_OUTPUT
+          cat analysis.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Upload analysis artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: diff-analysis
+          path: analysis.txt
+
+      - name: Wait for approval
+        id: approve
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ secrets.GITHUB_TOKEN }}
+          approvers: ${{ github.actor }}
+
+      - name: Send email with analysis
+        if: ${{ steps.approve.outputs.approved == 'true' }}
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: Diff analysis for ${{ github.sha }}
+          to: ${{ secrets.MAIL_TO }}
+          from: GitHub Actions <${{ secrets.SMTP_USERNAME }}>
+          body: |
+            Diff analysis for commit ${{ github.sha }}:
+
+            ${{ steps.analyze.outputs.analysis }}
