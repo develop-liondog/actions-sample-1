@@ -34,8 +34,8 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           python scripts/analyze_diff.py diff.txt analysis.txt
-          # 念のため delimiter を除去
           sed '/^__END_OF_ANALYSIS__$/d' analysis.txt > sanitized_analysis.txt
+          printf '\n' >> sanitized_analysis.txt
 
       - name: 解析結果をアップロード
         uses: actions/upload-artifact@v4
@@ -44,12 +44,9 @@ jobs:
           path: sanitized_analysis.txt
 
   approve_and_email:
-    # ← 解析が終わってから開始
     needs: analyze
     runs-on: ubuntu-latest
-    # ← ここで Environment 承認を要求（リポジトリ設定で mail-approval に Required reviewers を設定）
     environment: mail-approval
-
     steps:
       - name: 解析結果をダウンロード
         uses: actions/download-artifact@v4
@@ -60,9 +57,12 @@ jobs:
         id: read
         shell: bash
         run: |
-          echo "analysis<<__EOF__" >> $GITHUB_OUTPUT
-          cat sanitized_analysis.txt >> $GITHUB_OUTPUT
-          echo "__EOF__" >> $GITHUB_OUTPUT
+          DELIM="$(uuidgen || echo DELIM_$(date +%s%N))"
+          {
+            echo "analysis<<${DELIM}"
+            cat sanitized_analysis.txt
+            echo "${DELIM}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: 解析結果をメール送信
         uses: dawidd6/action-send-mail@v3
@@ -78,3 +78,4 @@ jobs:
             コミット ${{ github.sha }} の差分解析:
 
             ${{ steps.read.outputs.analysis }}
+          attachments: sanitized_analysis.txt
