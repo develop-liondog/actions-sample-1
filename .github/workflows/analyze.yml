@@ -1,35 +1,46 @@
 name: 差分解析とメール送信
+# このワークフローはコミット差分をOpenAIで解析し、承認後にメール送信します
+
 
 on:
+# mainブランチへのpushでトリガー
   push:
     branches:
       - main
 
 jobs:
+# analyzeジョブ: 差分解析と承認・メール送信を担当
   analyze:
+    # 必要な権限（アーティファクト・リポジトリ・Issue操作）
     permissions:
       actions: write
       contents: read
       issues: write
     runs-on: ubuntu-latest
     steps:
+      # コードを最新状態で取得
       - name: コードをチェックアウト
         uses: actions/checkout@v3
 
       - name: Python をセットアップ
+      # Python 3.x環境をセットアップ
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
       - name: git diff を取得
+      # 直近2コミットの差分を取得し diff.txt に保存
         run: |
           git fetch --depth=2 origin ${{ github.ref }}
           git diff HEAD^ HEAD > diff.txt
 
       - name: 依存関係をインストール
+      # OpenAIパッケージをインストール
         run: pip install openai
 
       - name: OpenAIで差分を解析
+      # diff.txtをOpenAI APIで解析し、結果をanalysis.txtに保存
+      # analysis.txtにdelimiterが含まれている場合は除去してGITHUB_OUTPUTに出力
         id: analyze
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -43,12 +54,14 @@ jobs:
             echo "__END_OF_ANALYSIS__" >> $GITHUB_OUTPUT
 
       - name: 解析結果をアップロード
+      # 解析結果ファイルをアーティファクトとして保存
         uses: actions/upload-artifact@v4
         with:
           name: diff-analysis
           path: analysis.txt
 
       - name: 承認を待機
+      # trstringer/manual-approvalで手動承認を要求（Issue作成・承認待ち）
         id: approve
         uses: trstringer/manual-approval@v1
         with:
@@ -56,9 +69,11 @@ jobs:
           approvers: ${{ github.actor }}
 
       - name: 手動承認の出力を記録
+      # manual-approvalステップの承認ステータス（approval-status）をログ出力
         run: echo "approve.approval-status=${{ steps.approve.outputs['approval-status'] }}"
 
       - name: 解析結果をメール送信
+      # manual-approvalで承認された場合のみ、解析結果をメール送信
         if: ${{ steps.approve.outputs['approval-status'] == 'approved' }}
         uses: dawidd6/action-send-mail@v3
         with:
