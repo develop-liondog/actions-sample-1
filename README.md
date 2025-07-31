@@ -1,55 +1,47 @@
 # actions-sample-1
 
-This repository contains a simple notes CLI application (`main.py`) and a GitHub
-Actions workflow that analyzes code changes using OpenAI before sending a summary
-via email upon approval.
+このリポジトリにはシンプルなノート CLI アプリケーション (`main.py`) と、OpenAI を利用してコードの差分を解析し、承認後にメールで送信する GitHub Actions ワークフローが含まれています。
 
-## Notes Application
+## ノートアプリ
 
-The CLI allows you to add, list, remove and search notes stored in `notes.json`.
+CLI では `notes.json` に保存されたノートの追加、一覧表示、削除、検索が行えます。
 
 ```bash
-python main.py add "title" "content"
+python main.py add "タイトル" "内容"
 python main.py list
 python main.py remove <id>
-python main.py search "keyword"
+python main.py search "キーワード"
 ```
 
-## GitHub Actions Workflow
+## GitHub Actions ワークフロー
 
-The workflow located at `.github/workflows/analyze.yml` performs the following:
+`.github/workflows/analyze.yml` にあるワークフローは次の処理を行います。
 
-1. Trigger on pushes to the `main` branch.
-2. Capture the git diff and send it to OpenAI to summarize potential impact.
-3. Upload the summary as an artifact and wait for manual approval.
-4. After approval, email the analysis to the address specified in secrets.
+1. `main` ブランチへの push をトリガーとして実行される。
+2. git diff を取得し、OpenAI に送信して変更の影響を要約する。
+3. 要約をアーティファクトとしてアップロードし、手動承認を待つ。
+4. 承認されると、分析結果をメールで送信する。
 
-### Required Secrets
+### 必要なシークレット
 
-- `OPENAI_API_KEY` – API key for OpenAI.
-- `SMTP_SERVER`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD` – credentials for sending email.
-- `MAIL_TO` – recipient email address.
+- `OPENAI_API_KEY` – OpenAI の API キー。
+- `SMTP_SERVER`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD` – メール送信に使用する認証情報。
+- `MAIL_TO` – 送信先メールアドレス。
 
-The manual approval step uses the [trstringer/manual-approval](https://github.com/trstringer/manual-approval)
-action. The email is sent using [dawidd6/action-send-mail](https://github.com/dawidd6/action-send-mail).
+手動承認ステップでは [trstringer/manual-approval](https://github.com/trstringer/manual-approval) アクションを使用しています。メール送信には [dawidd6/action-send-mail](https://github.com/dawidd6/action-send-mail) を利用しています。
 
 ### Personal Access Token
 
-The workflow relies on the built-in `GITHUB_TOKEN` for most operations. When running in
-environments where this token does not have sufficient privileges (e.g. forks), create a
-PAT with at least the following scopes:
+ワークフローは基本的に組み込みの `GITHUB_TOKEN` を利用しますが、フォーク環境などで権限が不足している場合は、以下のスコープを持つ PAT を作成してください。
 
-- `repo` – read repository contents and create statuses for approval.
-- `workflow` – trigger and approve workflows.
+- `repo` – リポジトリの読み取りと承認用ステータスの作成。
+- `workflow` – ワークフローの実行・承認。
 
-Add this token as a secret (for example `GH_PAT`) and reference it in the workflow if needed.
+作成したトークンはシークレット（例: `GH_PAT`）として登録し、必要に応じてワークフローで参照してください。
 
-### Notes on `GITHUB_OUTPUT`
+### `GITHUB_OUTPUT` について
 
-`Analyze diff with OpenAI` ステップでは、分析結果をマルチライン変数として出力します。
-`"Matching delimiter not found '__END_OF_ANALYSIS__'"` エラーを防ぐため、
-閉じ区切り（delimiter）は必ず単独行で記述する必要があります。
-このワークフローでは、閉じ区切りの直前に空行を挿入しています。
+`Analyze diff with OpenAI` ステップでは、分析結果をマルチライン変数として出力します。`"Matching delimiter not found '__END_OF_ANALYSIS__'"` エラーを防ぐため、閉じ区切りは必ず単独行で記述する必要があります。このワークフローでは閉じ区切りの直前に空行を挿入しています。
 
 ```bash
 echo "analysis<<__END_OF_ANALYSIS__" >> $GITHUB_OUTPUT

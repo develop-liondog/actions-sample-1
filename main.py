@@ -67,19 +67,19 @@ def print_note(note: Note):
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description="Simple notes app")
+    parser = argparse.ArgumentParser(description="シンプルなノートアプリ")
     subparsers = parser.add_subparsers(dest="command")
 
-    add_p = subparsers.add_parser("add", help="Add a new note")
+    add_p = subparsers.add_parser("add", help="ノートを追加")
     add_p.add_argument("title")
     add_p.add_argument("content")
 
-    rm_p = subparsers.add_parser("remove", help="Remove a note")
+    rm_p = subparsers.add_parser("remove", help="ノートを削除")
     rm_p.add_argument("id", type=int)
 
-    list_p = subparsers.add_parser("list", help="List notes")
+    list_p = subparsers.add_parser("list", help="ノートを一覧表示")
 
-    search_p = subparsers.add_parser("search", help="Search notes")
+    search_p = subparsers.add_parser("search", help="ノートを検索")
     search_p.add_argument("keyword")
 
     args = parser.parse_args()
