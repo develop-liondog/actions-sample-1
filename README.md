@@ -19,7 +19,7 @@ python main.py search "キーワード"
 
 1. `main` ブランチへの push をトリガーとして実行される。
 2. git diff を取得し、OpenAI に送信して変更の影響を要約する。
-3. 要約をアーティファクトとしてアップロードし、手動承認を待つ。
+3. 要約をアーティファクトとしてアップロードし、Environment 承認を待つ。
 4. 承認されると、分析結果をメールで送信する。
 
 ### 必要なシークレット
@@ -28,7 +28,7 @@ python main.py search "キーワード"
 - `SMTP_SERVER`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD` – メール送信に使用する認証情報。
 - `MAIL_TO` – 送信先メールアドレス。
 
-手動承認ステップでは [trstringer/manual-approval](https://github.com/trstringer/manual-approval) アクションを使用しています。メール送信には [dawidd6/action-send-mail](https://github.com/dawidd6/action-send-mail) を利用しています。
+承認には GitHub の Environment 機能を利用します。メール送信には [dawidd6/action-send-mail](https://github.com/dawidd6/action-send-mail) を利用しています。
 
 ### Personal Access Token
 
