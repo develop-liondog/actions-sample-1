@@ -1,4 +1,4 @@
-name: Analyze Diff and Send Email
+name: 差分解析とメール送信
 
 on:
   push:
@@ -13,23 +13,23 @@ jobs:
       issues: write
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: コードをチェックアウト
         uses: actions/checkout@v3
 
-      - name: Set up Python
+      - name: Python をセットアップ
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
-      - name: Get git diff
+      - name: git diff を取得
         run: |
           git fetch --depth=2 origin ${{ github.ref }}
           git diff HEAD^ HEAD > diff.txt
 
-      - name: Install dependencies
+      - name: 依存関係をインストール
         run: pip install openai
 
-      - name: Analyze diff with OpenAI
+      - name: OpenAIで差分を解析
         id: analyze
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -42,23 +42,23 @@ jobs:
             echo "" >> $GITHUB_OUTPUT
             echo "__END_OF_ANALYSIS__" >> $GITHUB_OUTPUT
 
-      - name: Upload analysis artifact
+      - name: 解析結果をアップロード
         uses: actions/upload-artifact@v4
         with:
           name: diff-analysis
           path: analysis.txt
 
-      - name: Wait for approval
+      - name: 承認を待機
         id: approve
         uses: trstringer/manual-approval@v1
         with:
           secret: ${{ github.TOKEN }}
           approvers: ${{ github.actor }}
 
-      - name: Log manual-approval outputs
+      - name: 手動承認の出力を記録
         run: echo "approve.approval-status=${{ steps.approve.outputs['approval-status'] }}"
 
-      - name: Send email with analysis
+      - name: 解析結果をメール送信
         if: ${{ steps.approve.outputs['approval-status'] == 'approved' }}
         uses: dawidd6/action-send-mail@v3
         with:
@@ -66,10 +66,10 @@ jobs:
           server_port: ${{ secrets.SMTP_PORT }}
           username: ${{ secrets.SMTP_USERNAME }}
           password: ${{ secrets.SMTP_PASSWORD }}
-          subject: Diff analysis for ${{ github.sha }}
+          subject: コミット ${{ github.sha }} の差分解析
           to: ${{ secrets.MAIL_TO }}
           from: GitHub Actions <${{ secrets.SMTP_USERNAME }}>
           body: |
-            Diff analysis for commit ${{ github.sha }}:
+            コミット ${{ github.sha }} の差分解析:
 
             ${{ steps.analyze.outputs.analysis }}
