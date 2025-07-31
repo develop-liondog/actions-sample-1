@@ -1,73 +1,70 @@
 name: 差分解析とメール送信
-# このワークフローはコミット差分をOpenAIで解析し、承認後にメール送信します
-
 
 on:
-# mainブランチへのpushでトリガー
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
-# analyzeジョブ: 差分解析と承認・メール送信を担当
   analyze:
-    # 必要な権限（アーティファクト・リポジトリ・Issue操作）
     permissions:
       actions: write
       contents: read
       issues: write
     runs-on: ubuntu-latest
     steps:
-      # コードを最新状態で取得
       - name: コードをチェックアウト
         uses: actions/checkout@v3
 
       - name: Python をセットアップ
-      # Python 3.x環境をセットアップ
         uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
       - name: git diff を取得
-      # 直近2コミットの差分を取得し diff.txt に保存
         run: |
           git fetch --depth=2 origin ${{ github.ref }}
           git diff HEAD^ HEAD > diff.txt
 
       - name: 依存関係をインストール
-      # OpenAIパッケージをインストール
         run: pip install openai
 
       - name: OpenAIで差分を解析
-      # diff.txtをOpenAI APIで解析し、結果をanalysis.txtに保存
-      # analysis.txtにdelimiterが含まれている場合は除去してGITHUB_OUTPUTに出力
         id: analyze
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-            python scripts/analyze_diff.py diff.txt analysis.txt
-            # delimiterがanalysis.txtに含まれている場合は除去
-            sed '/^__END_OF_ANALYSIS__$/d' analysis.txt > sanitized_analysis.txt
-            echo "analysis<<__END_OF_ANALYSIS__" >> $GITHUB_OUTPUT
-            cat sanitized_analysis.txt >> $GITHUB_OUTPUT
-            echo "" >> $GITHUB_OUTPUT
-            echo "__END_OF_ANALYSIS__" >> $GITHUB_OUTPUT
+          python scripts/analyze_diff.py diff.txt analysis.txt
+          # 念のため delimiter を除去
+          sed '/^__END_OF_ANALYSIS__$/d' analysis.txt > sanitized_analysis.txt
 
       - name: 解析結果をアップロード
-      # 解析結果ファイルをアーティファクトとして保存
         uses: actions/upload-artifact@v4
         with:
           name: diff-analysis
-          path: analysis.txt
+          path: sanitized_analysis.txt
 
-      - name: 承認を待機
-      # Environment承認を利用してメール送信前に停止
-        environment:
-          name: mail-approval
-        run: echo "承認されました"
+  approve_and_email:
+    # ← 解析が終わってから開始
+    needs: analyze
+    runs-on: ubuntu-latest
+    # ← ここで Environment 承認を要求（リポジトリ設定で mail-approval に Required reviewers を設定）
+    environment: mail-approval
+
+    steps:
+      - name: 解析結果をダウンロード
+        uses: actions/download-artifact@v4
+        with:
+          name: diff-analysis
+
+      - name: 本文に埋め込むために読み込み
+        id: read
+        shell: bash
+        run: |
+          echo "analysis<<__EOF__" >> $GITHUB_OUTPUT
+          cat sanitized_analysis.txt >> $GITHUB_OUTPUT
+          echo "__EOF__" >> $GITHUB_OUTPUT
 
       - name: 解析結果をメール送信
-      # 承認後に解析結果をメール送信
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_SERVER }}
@@ -80,4 +77,4 @@ jobs:
           body: |
             コミット ${{ github.sha }} の差分解析:
 
-            ${{ steps.analyze.outputs.analysis }}
+            ${{ steps.read.outputs.analysis }}
