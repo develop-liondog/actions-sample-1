@@ -46,9 +46,10 @@ Add this token as a secret (for example `GH_PAT`) and reference it in the workfl
 
 ### Notes on `GITHUB_OUTPUT`
 
-The `Analyze diff with OpenAI` step outputs the analysis using a multi-line variable. To
-avoid `"Matching delimiter not found '__END_OF_ANALYSIS__'"` errors, the closing delimiter
-must appear on its own line. The workflow writes a blank line before the closing delimiter:
+`Analyze diff with OpenAI` ステップでは、分析結果をマルチライン変数として出力します。
+`"Matching delimiter not found '__END_OF_ANALYSIS__'"` エラーを防ぐため、
+閉じ区切り（delimiter）は必ず単独行で記述する必要があります。
+このワークフローでは、閉じ区切りの直前に空行を挿入しています。
 
 ```bash
 echo "analysis<<__END_OF_ANALYSIS__" >> $GITHUB_OUTPUT
