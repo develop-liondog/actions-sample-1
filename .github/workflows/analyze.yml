@@ -52,16 +52,14 @@ jobs:
         id: approve
         uses: trstringer/manual-approval@v1
         with:
-          secret: ${{ secrets.GH_TOKEN }}
+          secret: ${{ github.TOKEN }}
           approvers: ${{ github.actor }}
 
       - name: Log manual-approval outputs
-        run: |
-          echo "approve.result=${{ steps.approve.outputs.result }}"
-          echo "approve.approved=${{ steps.approve.outputs.approved }}"
+        run: echo "approve.approval-status=${{ steps.approve.outputs['approval-status'] }}"
 
       - name: Send email with analysis
-        if: ${{ steps.approve.outputs.result == 'approved' || steps.approve.outputs.approved == 'true' }}
+        if: ${{ steps.approve.outputs['approval-status'] == 'approved' }}
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_SERVER }}
